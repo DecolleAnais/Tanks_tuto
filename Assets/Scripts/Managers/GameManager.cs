@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
-//using UnityEngine.SceneManagement;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
-    public int m_NumRoundsToWin = 5;        
+    public int m_NumRoundsToWin = 3;        
     public float m_StartDelay = 3f;         
-    public float m_EndDelay = 3f;           
+    public float m_EndDelay = 4f;           
     public CameraControl m_CameraControl;   
     public Text m_MessageText;              
     public GameObject m_TankPrefab;         
@@ -17,9 +17,9 @@ public class GameManager : MonoBehaviour
     private int m_RoundNumber;              
     private WaitForSeconds m_StartWait;     
     private WaitForSeconds m_EndWait;       
-/*    private TankManager m_RoundWinner;
+    private TankManager m_RoundWinner;
     private TankManager m_GameWinner;       
-*/
+
 
     private void Start()
     {
@@ -64,31 +64,64 @@ public class GameManager : MonoBehaviour
         yield return StartCoroutine(RoundPlaying());
         yield return StartCoroutine(RoundEnding());
 
-/*        if (m_GameWinner != null)
+        if (m_GameWinner != null)
         {
-            SceneManager.LoadScene(0);
+            //SceneManager.LoadScene(0); // reload the game
+            #if UNITY_EDITOR
+                // Application.Quit() does not work in the editor so
+                // UnityEditor.EditorApplication.isPlaying need to be set to false to end the game
+                UnityEditor.EditorApplication.isPlaying = false;
+            #else
+                Application.Quit();
+            #endif
         }
         else
         {
             StartCoroutine(GameLoop());
         }
-*/    }
+    }
 
 
     private IEnumerator RoundStarting()
     {
+        ResetAllTanks();
+        DisableTankControl();
+
+        m_CameraControl.SetStartPositionAndSize();
+
+        m_RoundNumber++;
+        m_MessageText.text = "ROUND " + m_RoundNumber;
+
         yield return m_StartWait;
     }
 
 
     private IEnumerator RoundPlaying()
     {
-        yield return null;
+        EnableTankControl();
+
+        m_MessageText.text = string.Empty;
+        while (!OneTankLeft())
+        {
+            yield return null;
+        }
     }
 
 
     private IEnumerator RoundEnding()
     {
+        DisableTankControl();
+
+        m_RoundWinner = null;
+        m_RoundWinner = GetRoundWinner();
+        if(m_RoundWinner != null)
+            m_RoundWinner.m_Wins++;
+
+        m_GameWinner = GetGameWinner();
+
+        string message = EndMessage();
+        m_MessageText.text = message;
+
         yield return m_EndWait;
     }
 
@@ -106,7 +139,7 @@ public class GameManager : MonoBehaviour
         return numTanksLeft <= 1;
     }
 
-/*
+
     private TankManager GetRoundWinner()
     {
         for (int i = 0; i < m_Tanks.Length; i++)
@@ -133,10 +166,13 @@ public class GameManager : MonoBehaviour
 
     private string EndMessage()
     {
-        string message = "DRAW!";
+        string message = "EQUALITY !";
 
         if (m_RoundWinner != null)
-            message = m_RoundWinner.m_ColoredPlayerText + " WINS THE ROUND!";
+            message = m_RoundWinner.m_ColoredPlayerText + " WINS THE ROUND !";
+
+        if (m_GameWinner != null)
+            message = m_GameWinner.m_ColoredPlayerText + " WINS THE GAME !";
 
         message += "\n\n\n\n";
 
@@ -145,12 +181,10 @@ public class GameManager : MonoBehaviour
             message += m_Tanks[i].m_ColoredPlayerText + ": " + m_Tanks[i].m_Wins + " WINS\n";
         }
 
-        if (m_GameWinner != null)
-            message = m_GameWinner.m_ColoredPlayerText + " WINS THE GAME!";
 
         return message;
     }
-*/
+
 
     private void ResetAllTanks()
     {
