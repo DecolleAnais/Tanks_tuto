@@ -8,4 +8,4 @@ https://unity3d.com/fr/learn/tutorials/s/tanks-tutorial
 keyboard controls
 attack with shells fired, explosions
 UI (health in a circle slider, shooting assist with a progressive arrow in a slider)
-sounds
+sounds mixer
